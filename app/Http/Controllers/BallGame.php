@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Game;
 use App\Http\Controllers\GameController;
-error_reporting(E_ERROR | E_PARSE);
 
 
 
@@ -14,23 +13,25 @@ class BallGame extends Controller
 
     public function __construct(Request $request)
     {
-        //
-    }
 
+    }
 
     public function index(Request $request)
     {
         return view('home');
     }
 
-
+    public function result()
+    {
+        $result = Game::resultModel();
+        return $result;
+    }
 
     public function GameSession($n, $myColors)
     {
 
         $boxesArray = array();
         $currentBox = 0;
-        //$myColors = array('verde' => 3, 'roz' => 10, 'albastru' => 1, 'galben' => 2, 'rosu' => 9);
         uksort($myColors, function() { return rand() > rand(); });
 
         foreach ($myColors as $key => $value)
@@ -58,6 +59,7 @@ class BallGame extends Controller
                         $boxesArray[$currentBox] .= $key.'-'.($n - $nOfBalls).'#';
                         $value = $value - ($n - $nOfBalls);
                     }
+
                 } else {
 
                     if($nOfBalls == 0)
@@ -85,6 +87,7 @@ class BallGame extends Controller
 
     public function formSubmit(Request $request)
     {
+
         $numarBile = request()->input('numarBile');
         $user['numarBile'] = count(request('culoare'))/2;
         $ballsId = rand(1,9999);
@@ -93,31 +96,23 @@ class BallGame extends Controller
         for($i = 0; $i < count($bila); $i+=2) {
             $child1[] = $bila[$i];
             $child2[] = $bila[$i+1];
-            // print both
         }
 
         if(count($child2) != $numarBile)
         {
-            return back()->withErrors('first_err', 'Fail to create user!');
+            return back()->withErrors('first_err', 'Number of balls is not correct!');
         }
 
         $myColors = array_combine($child1, $child2);
 
-
-        if ( $request->has('submitForm') && (csrf_token() == $request->input('_token')) && session()->get('_token') )
+        if ( $request->has('submitForm') )
         {
             $user = $this->GameSession($user['numarBile'], $myColors);
 
-            //dd($user);
+            Game::addUser($user, $ballsId);
 
-            if(!Game::addUser($user, $ballsId)) {
-
-                return redirect()->back()->withErrors('Datele nu au putut fi salvate in baza de date! Te rugam sa incerci.');
-
-            }
-
-            else
-            return redirect('/')->with('success', 'User created successfully.');
+            return redirect('/');
         }
     }
+
 }

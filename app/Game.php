@@ -25,4 +25,9 @@ class Game extends Model
             $i++;
         }
     }
+
+    public static function resultModel()
+    {
+        return DB::table('boxes as b')->leftJoin('colors as c', 'b.id', '=', 'c.id_parent')->get(['c.id_parent']);
+    }
 }
